@@ -1,14 +1,24 @@
-FROM node:20
+FROM node:18-alpine
 
-# Instala Playwright e dependências do Chromium
-RUN apt-get update && apt-get install -y wget gnupg ca-certificates libglib2.0-0 libnss3 libatk-bridge2.0-0 libxss1 libasound2 libx11-xcb1 libgtk-3-0 libxcomposite1 libxdamage1 libxrandr2 libgbm-dev libpango-1.0-0 libatk1.0-0 libcups2 && \
-    rm -rf /var/lib/apt/lists/*
+# Instalar dependências do sistema necessárias para o Playwright rodar (Chromium etc)
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    && rm -rf /var/cache/*
 
 WORKDIR /app
 
 COPY package*.json ./
+
 RUN npm install
+
+# Baixar navegadores para Playwright
+RUN npx playwright install
 
 COPY . .
 
-CMD ["npm", "start"]
+CMD ["node", "threadsScraper.js"]
