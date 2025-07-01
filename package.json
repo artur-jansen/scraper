@@ -2,6 +2,9 @@
   "name": "threads-scraper",
   "version": "1.0.0",
   "main": "threadsScraper.js",
+  "scripts": {
+    "start": "node threadsScraper.js"
+  },
   "dependencies": {
     "axios": "^1.6.8",
     "playwright": "^1.44.1"
