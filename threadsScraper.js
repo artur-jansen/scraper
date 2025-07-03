@@ -24,12 +24,19 @@ async function run() {
     try {
       console.log(`\n➡️ Pesquisando termo: "${tag}"...`);
       await page.goto(`https://www.threads.com/search?q=${encodeURIComponent(tag)}&serp_type=default`);
-      await page.waitForTimeout(5000);
-      console.log(await page.content());
+      await page.waitForTimeout(7000); // Aguarde um pouco mais, pode ser necessário
 
-      // ATENÇÃO: Ajuste o seletor abaixo conforme o layout real da página de busca do Threads!
-      // Se não encontrar posts, use console.log(await page.content()) para descobrir o seletor certo!
-      const posts = await page.$$eval('article', articles =>
+      // Faz scroll para baixo para tentar carregar mais resultados
+      await page.evaluate(() => window.scrollBy(0, window.innerHeight));
+      await page.waitForTimeout(2000);
+
+      // Salvando título e screenshot para depuração automática
+      const titulo = await page.title();
+      await page.screenshot({ path: `threads-debug-${tag}.png` });
+      console.log(`📝 Título da página: ${titulo}`);
+
+      // Troque aqui pelo seletor correto para posts após descobrir (exemplo abaixo)
+      const posts = await page.$$eval('SELETOR_CORRETO_AQUI', articles =>
         articles.map(article => {
           const text = article.innerText;
           const username = article.querySelector('a')?.href || 'desconhecido';
