@@ -25,6 +25,7 @@ async function run() {
       console.log(`\n➡️ Pesquisando termo: "${tag}"...`);
       await page.goto(`https://www.threads.com/search?q=${encodeURIComponent(tag)}&serp_type=default`);
       await page.waitForTimeout(5000);
+      console.log(await page.content());
 
       // ATENÇÃO: Ajuste o seletor abaixo conforme o layout real da página de busca do Threads!
       // Se não encontrar posts, use console.log(await page.content()) para descobrir o seletor certo!
