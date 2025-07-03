@@ -16,17 +16,18 @@ const N8N_WEBHOOK = 'https://n8n.doisdev.com.br/workflow/TNhLNO6JBGg9ClzR';
 
 async function run() {
   console.log('⚡ Iniciando o scraper de Threads...');
-
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ storageState: 'auth.json' });
   const page = await context.newPage();
 
   for (const tag of HASHTAGS) {
     try {
-      console.log(`\n➡️ Acessando hashtag: #${tag}...`);
-      await page.goto(`https://www.threads.net/t/${tag}`);
+      console.log(`\n➡️ Pesquisando termo: "${tag}"...`);
+      await page.goto(`https://www.threads.com/search?q=${encodeURIComponent(tag)}&serp_type=default`);
       await page.waitForTimeout(5000);
 
+      // ATENÇÃO: Ajuste o seletor abaixo conforme o layout real da página de busca do Threads!
+      // Se não encontrar posts, use console.log(await page.content()) para descobrir o seletor certo!
       const posts = await page.$$eval('article', articles =>
         articles.map(article => {
           const text = article.innerText;
@@ -35,22 +36,18 @@ async function run() {
         })
       );
 
-      console.log(`🔎 Hashtag #${tag}: Encontrados ${posts.length} posts.`);
+      console.log(`🔎 Termo "${tag}": Encontrados ${posts.length} posts.`);
       if (posts.length === 0) {
-        console.log(`⚠️ Nenhum post encontrado na hashtag #${tag}.`);
+        console.log(`⚠️ Nenhum post encontrado no termo "${tag}".`);
       }
-
       let achouLead = false;
-
       for (const post of posts) {
-        console.log('📌 Post encontrado:', post); // Loga todo post para debug
-
+        console.log('📌 Post encontrado:', post);
         const texto = post.text.toLowerCase();
         const encontrou = palavrasChave.some(p => texto.includes(p.toLowerCase()));
         if (encontrou) {
           achouLead = true;
           console.log('🎯 Lead relevante encontrado:', post);
-          // Só tente enviar para o n8n se quiser verificar eventual erro, pode deixar comentado por enquanto
           await axios.post(N8N_WEBHOOK, {
             text: post.text,
             username: post.username
@@ -59,12 +56,11 @@ async function run() {
           });
         }
       }
-
       if (!achouLead && posts.length > 0) {
-        console.log(`🤷‍♂️ Nenhum lead relevante encontrado na hashtag #${tag}.`);
+        console.log(`🤷‍♂️ Nenhum lead relevante encontrado no termo "${tag}".`);
       }
     } catch (err) {
-      console.error(`❗ Erro ao processar hashtag #${tag}:`, err.message);
+      console.error(`❗ Erro ao processar termo "${tag}":`, err.message);
     }
   }
   await browser.close();
